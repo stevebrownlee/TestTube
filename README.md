@@ -1,6 +1,6 @@
 # TestTube
 
-TestTube is a .NET 7 Web API for managing laboratory scientists and their equipment. It provides a simple RESTful API for tracking scientists, their departments, and the laboratory equipment assigned to them.
+TestTube is a .NET 8 Web API for managing laboratory scientists and their equipment. It provides a simple RESTful API for tracking scientists, their departments, and the laboratory equipment assigned to them.
 
 ## Features
 
