@@ -1,5 +1,7 @@
 namespace TestTube.Models;
 
+using System;
+
 public class Equipment
 {
     public int Id { get; set; }

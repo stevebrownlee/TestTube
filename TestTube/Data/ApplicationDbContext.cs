@@ -17,6 +17,15 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Configure DateTime properties to be stored as timestamp with time zone
+        modelBuilder.Entity<Scientist>()
+            .Property(s => s.HireDate)
+            .HasColumnType("timestamp with time zone");
+
+        modelBuilder.Entity<Equipment>()
+            .Property(e => e.PurchaseDate)
+            .HasColumnType("timestamp with time zone");
+
         // Seed data
         modelBuilder.Entity<Scientist>().HasData(
             new Scientist

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TestTube.Data;
@@ -13,6 +14,20 @@ public static class TestHelper
     {
         BaseAddress = new Uri("http://localhost:5081")
     };
+
+    // Helper method to create consistent JSON serialization options with DateTime converter
+    private static JsonSerializerOptions CreateJsonOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        // Register the custom DateTimeJsonConverter for all DateTime properties
+        options.Converters.Add(new TestTube.DTOs.DateTimeJsonConverter());
+
+        return options;
+    }
 
     public static ApplicationDbContext CreateInMemoryDbContext()
     {
@@ -118,10 +133,8 @@ public static class TestHelper
         var response = await _client.GetAsync("/scientists");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<ScientistDto>>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+
+        return JsonSerializer.Deserialize<List<ScientistDto>>(content, CreateJsonOptions());
     }
 
     public static async Task<ScientistDetailDto> GetScientistByIdAsync(int id)
@@ -129,10 +142,8 @@ public static class TestHelper
         var response = await _client.GetAsync($"/scientists/{id}");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<ScientistDetailDto>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+
+        return JsonSerializer.Deserialize<ScientistDetailDto>(content, CreateJsonOptions());
     }
 
     public static async Task<List<EquipmentDto>> GetAllEquipmentAsync()
@@ -140,10 +151,8 @@ public static class TestHelper
         var response = await _client.GetAsync("/equipment");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<EquipmentDto>>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+
+        return JsonSerializer.Deserialize<List<EquipmentDto>>(content, CreateJsonOptions());
     }
 
     public static async Task<EquipmentDetailDto> GetEquipmentByIdAsync(int id)
@@ -151,9 +160,83 @@ public static class TestHelper
         var response = await _client.GetAsync($"/equipment/{id}");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<EquipmentDetailDto>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+
+        return JsonSerializer.Deserialize<EquipmentDetailDto>(content, CreateJsonOptions());
+    }
+
+    public static async Task<EquipmentDto> CreateEquipmentAsync(EquipmentDto equipment)
+    {
+        var options = CreateJsonOptions();
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(equipment, options),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        var response = await _client.PostAsync("/equipment", content);
+        response.EnsureSuccessStatusCode();
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<EquipmentDto>(responseContent, options);
+    }
+
+    public static async Task<EquipmentDto> UpdateEquipmentAsync(int id, EquipmentDto equipment)
+    {
+        var options = CreateJsonOptions();
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(equipment, options),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        var response = await _client.PutAsync($"/equipment/{id}", content);
+        response.EnsureSuccessStatusCode();
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<EquipmentDto>(responseContent, options);
+    }
+
+    public static async Task<HttpResponseMessage> DeleteEquipmentAsync(int id)
+    {
+        var response = await _client.DeleteAsync($"/equipment/{id}");
+        return response;
+    }
+
+    public static async Task<ScientistDto> CreateScientistAsync(ScientistDto scientist)
+    {
+        var options = CreateJsonOptions();
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(scientist, options),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        var response = await _client.PostAsync("/scientists", content);
+        response.EnsureSuccessStatusCode();
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ScientistDto>(responseContent, options);
+    }
+
+    public static async Task<ScientistDto> UpdateScientistAsync(int id, ScientistDto scientist)
+    {
+        var options = CreateJsonOptions();
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(scientist, options),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        var response = await _client.PutAsync($"/scientists/{id}", content);
+        response.EnsureSuccessStatusCode();
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ScientistDto>(responseContent, options);
+    }
+
+    public static async Task<HttpResponseMessage> DeleteScientistAsync(int id)
+    {
+        var response = await _client.DeleteAsync($"/scientists/{id}");
+        return response;
     }
 }

@@ -12,28 +12,35 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureServices(services =>
         {
-            // Find and remove the DbContext service descriptor
-            var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+            // Remove all DbContext and DbContextOptions registrations
+            var descriptors = services.Where(
+                d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                     d.ServiceType == typeof(DbContextOptions) ||
+                     d.ServiceType.Name.Contains("DbContextOptions") ||
+                     (d.ServiceType.IsGenericType && d.ServiceType.GetGenericTypeDefinition() == typeof(DbContextOptions<>))
+            ).ToList();
 
-            if (descriptor != null)
+            foreach (var descriptor in descriptors)
             {
                 services.Remove(descriptor);
             }
 
-            // Remove any registered DbContextOptions
-            var optionsDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions));
+            // Remove any database provider registrations
+            var providerDescriptors = services.Where(
+                d => d.ServiceType.Name.Contains("DbContextOptionsExtension") ||
+                     d.ServiceType.Name.Contains("PostgreSQL") ||
+                     d.ServiceType.Name.Contains("Npgsql")
+            ).ToList();
 
-            if (optionsDescriptor != null)
+            foreach (var descriptor in providerDescriptors)
             {
-                services.Remove(optionsDescriptor);
+                services.Remove(descriptor);
             }
 
-            // Add in-memory database without using internal service provider
+            // Add in-memory database
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseInMemoryDatabase("TestTubeInMemoryDb");
+                options.UseInMemoryDatabase($"TestTubeInMemoryDb_{Guid.NewGuid()}");
             });
 
             // Create a new service provider for seeding
