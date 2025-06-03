@@ -10,6 +10,15 @@ TestTube is a .NET 8 Web API for managing laboratory scientists and their equipm
 - **PostgreSQL Database**: Persistent storage using PostgreSQL with Entity Framework Core
 - **Comprehensive Testing**: Includes unit and integration tests with in-memory database support
 
+## Architectural Style
+
+- This is a .NET minimal API
+- It defines all endpoints in modules in the `TestTube/Endpoints` directory
+- It defines all database models in the `TestTube/Models` directory
+- It defines all database data transfer objects in the `TestTube/DTOs` directory
+- It defines all database management in the `Data/ApplicationDbContext.cs` module‰
+- It has a test project in the `TestTube.Tests` directory
+
 ## API Endpoints
 
 ### Scientists

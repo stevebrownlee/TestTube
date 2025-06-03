@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TestTube.Data;
 
 namespace TestTube.Tests;
@@ -10,41 +11,34 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Set the environment to Testing
+        builder.UseEnvironment("Testing");
+
+        // The Program.cs will now use the in-memory database for the Testing environment
+
         builder.ConfigureServices(services =>
         {
-            // Find and remove the DbContext service descriptor
-            var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+            // Build the service provider
+            var sp = services.BuildServiceProvider();
 
-            if (descriptor != null)
+            // Create a scope to obtain a reference to the database context
+            using var scope = sp.CreateScope();
+            var scopedServices = scope.ServiceProvider;
+            var db = scopedServices.GetRequiredService<ApplicationDbContext>();
+            var logger = scopedServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
+
+            try
             {
-                services.Remove(descriptor);
+                // Ensure the database is created
+                db.Database.EnsureCreated();
+
+                // Seed the database with test data
+                TestHelper.SeedDatabase(db);
             }
-
-            // Remove any registered DbContextOptions
-            var optionsDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions));
-
-            if (optionsDescriptor != null)
+            catch (Exception ex)
             {
-                services.Remove(optionsDescriptor);
+                logger.LogError(ex, "An error occurred seeding the database. Error: {Message}", ex.Message);
             }
-
-            // Add in-memory database without using internal service provider
-            services.AddDbContext<ApplicationDbContext>(options =>
-            {
-                options.UseInMemoryDatabase("TestTubeInMemoryDb");
-            });
-
-            // Create a new service provider for seeding
-            using var serviceProvider = services.BuildServiceProvider();
-            using var scope = serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-            // Ensure the database is created and seed it
-            db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
-            TestHelper.SeedDatabase(db);
         });
     }
 }

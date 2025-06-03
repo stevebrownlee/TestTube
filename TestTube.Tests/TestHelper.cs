@@ -9,26 +9,7 @@ namespace TestTube.Tests;
 
 public static class TestHelper
 {
-    private static readonly HttpClient _client = new HttpClient
-    {
-        BaseAddress = new Uri("http://localhost:5081")
-    };
-
-    public static ApplicationDbContext CreateInMemoryDbContext()
-    {
-        var serviceProvider = new ServiceCollection()
-            .AddEntityFrameworkInMemoryDatabase()
-            .BuildServiceProvider();
-
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: $"TestTubeInMemoryDb_{Guid.NewGuid()}")
-            .UseInternalServiceProvider(serviceProvider)
-            .Options;
-
-        var dbContext = new ApplicationDbContext(options);
-        SeedDatabase(dbContext);
-        return dbContext;
-    }
+    // No static factory or client
 
     public static void SeedDatabase(ApplicationDbContext dbContext)
     {
@@ -113,9 +94,9 @@ public static class TestHelper
     }
 
     // HTTP client methods for integration testing
-    public static async Task<List<ScientistDto>> GetAllScientistsAsync()
+    public static async Task<List<ScientistDto>> GetAllScientistsAsync(HttpClient client)
     {
-        var response = await _client.GetAsync("/scientists");
+        var response = await client.GetAsync("/scientists");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<ScientistDto>>(content, new JsonSerializerOptions
@@ -124,9 +105,9 @@ public static class TestHelper
         });
     }
 
-    public static async Task<ScientistDetailDto> GetScientistByIdAsync(int id)
+    public static async Task<ScientistDetailDto> GetScientistByIdAsync(HttpClient client, int id)
     {
-        var response = await _client.GetAsync($"/scientists/{id}");
+        var response = await client.GetAsync($"/scientists/{id}");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<ScientistDetailDto>(content, new JsonSerializerOptions
@@ -135,9 +116,9 @@ public static class TestHelper
         });
     }
 
-    public static async Task<List<EquipmentDto>> GetAllEquipmentAsync()
+    public static async Task<List<EquipmentDto>> GetAllEquipmentAsync(HttpClient client)
     {
-        var response = await _client.GetAsync("/equipment");
+        var response = await client.GetAsync("/equipment");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<EquipmentDto>>(content, new JsonSerializerOptions
@@ -146,9 +127,9 @@ public static class TestHelper
         });
     }
 
-    public static async Task<EquipmentDetailDto> GetEquipmentByIdAsync(int id)
+    public static async Task<EquipmentDetailDto> GetEquipmentByIdAsync(HttpClient client, int id)
     {
-        var response = await _client.GetAsync($"/equipment/{id}");
+        var response = await client.GetAsync($"/equipment/{id}");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<EquipmentDetailDto>(content, new JsonSerializerOptions

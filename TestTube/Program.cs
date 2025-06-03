@@ -4,9 +4,19 @@ using TestTube.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure PostgreSQL with Entity Framework
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configure database based on environment
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    // For testing, use in-memory database
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseInMemoryDatabase("TestTubeInMemoryDb"));
+}
+else
+{
+    // For development and production, use PostgreSQL
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 var app = builder.Build();
 
