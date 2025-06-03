@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using TestTube.Data;
 using TestTube.DTOs;
 using TestTube.Models;
